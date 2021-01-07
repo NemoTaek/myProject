@@ -4,19 +4,19 @@
   padding: 0;
 }
 
-.background{
+#background{
   width: 100vw;
   height: 100vh;
   background-color: aquamarine;
 }
 
-.character{
-  width: 5vw;
-  height: 5vw;
+#character{
+  width: 10vw;
+  height: 10vw;
   border-radius: 100%;
   background-color: red;
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: 0;
+  left: 0;
+  /* transform: translate(-50%, -50%); */
 }
