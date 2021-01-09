@@ -5,19 +5,16 @@
 }
 
 #background{
-  width: calc(100vw - 100px);
-  height: calc(100vh - 100px);
-  padding: 50px;
+  width: 100vw;
+  height: 100vh;
   background-color: aquamarine;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-#character{
-  width: 50px;
-  height: 50px;
-  border-radius: 100%;
-  background-color: red;
-  position: absolute;
-  top: 50;
-  left: 50;
-  /* transform: translate(-50%, -50%); */
+#tetris_map{
+ width: 350px;
+ height: 700px;
+ background-color: black; 
 }
