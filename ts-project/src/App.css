@@ -2,19 +2,54 @@
   font-size: 10px;
   margin: 0;
   padding: 0;
+  font-family: 'Press Start 2P', cursive;
 }
 
 #background{
-  width: 100vw;
-  height: 100vh;
+  width: 99vw;
+  height: 99vh;
+  padding-left: 1vw;
+  padding-top: 1vh;
   background-color: aquamarine;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 300px 300px;
 }
 
 #tetris_map{
- width: 350px;
- height: 700px;
+ width: 300px;
+ height: 600px;
  background-color: black; 
+}
+
+.next_wrap{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 300px;
+  height: 600px;
+}
+
+.next_wrap_info{
+  padding-left: 30px;
+  padding-top: 10px;
+}
+.next_wrap_info h1{
+  font-size: 30px;
+  margin-bottom: 20px;
+}
+.next_wrap_info p{
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+.next{
+  margin-top: 30px;
+}
+
+.play-button {
+  background-color: #4caf50;
+  font-size: 16px;
+  padding: 15px 30px;
+  cursor: pointer;
+  width: 90%;
+  margin-left: 10%;
 }
