@@ -24,13 +24,27 @@ class Piece implements piece {
 
   // 시작 위치 설정
   setStartingPosition() {
-    this.x = this.typeId === 3 ? 4 : 3;
+    this.x = this.typeId === 4 ? 4 : 3;
     this.y = 0;
+  }
+  setNextPosition() {
+    if (this.typeId === 1) {
+      this.x = 0.5;
+      this.y = 0.5;
+    }
+    else if (this.typeId === 4) {
+      this.x = 1.5;
+      this.y = 1;
+    }
+    else {
+      this.x = 1;
+      this.y = 1;
+    }
   }
 
   // 블럭 생성
   spawn() {
-    this.typeId = Math.floor(Math.random() * COLORS.length);
+    this.typeId = Math.floor((Math.random() * (COLORS.length - 1)) + 1);
     this.color = COLORS[this.typeId];
     this.shape = SHAPES[this.typeId];
   }

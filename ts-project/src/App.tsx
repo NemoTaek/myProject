@@ -1,26 +1,44 @@
 import React, { useEffect, useRef } from 'react';
 import './App.css';
-import { COLS, ROWS, BLOCK_SIZE, KEY } from './component/constant'
+import { KEY, POINTS, LEVEL } from './component/constant'
 import Board from './component/board'
 
 function App() {
   let mapRef = useRef(null);
   let nextRef = useRef(null);
-  let requestId: any;
-  let time: any;
 
   useEffect(() => {
     let map = mapRef.current;
-    let next = nextRef.current
+    let next = nextRef.current;
     let mapContext = map.getContext('2d');
     let nextContext = next.getContext('2d');
 
-    // 맵 크기 세팅
-    // mapContext.canvas.width = COLS * BLOCK_SIZE;
-    // mapContext.canvas.height = ROWS * BLOCK_SIZE;
-    // mapContext.scale(BLOCK_SIZE, BLOCK_SIZE);
-    // nextContext.canvas.width = 100;
-    // nextContext.canvas.height = 100;
+    let requestId: any;
+    let time: any;
+
+    // 다 만들고 나중에 redux로 저장하자
+    let accountValues = {
+      score: 0,
+      lines: 0,
+      level: 0
+    }
+
+    // 사용자 정보 출력
+    function updateAccount(key, value) {
+      let element = document.getElementById(key);
+      if (element) {
+        element.textContent = value;
+      }
+    }
+
+    // Proxy인 account 변수에서 속성들을 호출할 때 마다 updateAccount()를 호출하여 DOM을 업데이트
+    let account = new Proxy(accountValues, {
+      set: (target, key, value) => {
+        target[key] = value;
+        updateAccount(key, value);
+        return true;
+      }
+    });
 
     // 블럭 이동 세팅
     const moves = {
@@ -31,20 +49,22 @@ function App() {
       [KEY.UP]: p => board.rotate(p)
     }
 
-    let board = new Board(mapContext);
+    let board = new Board(mapContext, nextContext);
 
     // 게임 설정 초기화
     const resetGame = (): void => {
-      // account.score = 0;
-      // account.lines = 0;
-      // account.level = 0;
+      account.score = 0;
+      account.lines = 0;
+      account.level = 0;
+      time = { start: performance.now(), elapsed: 0, level: LEVEL[account.level] };
       board.reset();
-      // time = { start: 0, elapsed: 0, level: LEVEL[account.level] };
-      time = { start: 0, elapsed: 0, level: 1000 };
     }
 
     // 게임 시작
     const play = (): void => {
+      if (requestId) {
+        cancelAnimationFrame(requestId);
+      }
       resetGame();
       animate();
     }
@@ -58,11 +78,14 @@ function App() {
         // 시작시간 0으로 초기화
         time.start = now;
 
-        // 1칸씩 하강
-        let p = moves[KEY.DOWN](board.piece);
-        if (board.valid(p)) {
-          board.piece.move(p);
+        board.drop(moves, time, account);
+        console.log(board.drop(moves, time, account));
+        console.log(board.piece.y)
+        if (!board.drop(moves, time, account)) {
+          gameOver();
+          return;
         }
+
       }
 
       // 맵 초기화 후 그리기
@@ -71,6 +94,17 @@ function App() {
 
       // 애니메이션 시작
       requestId = requestAnimationFrame(animate);
+    }
+
+    // 게임오버
+    function gameOver() {
+      console.log('finish')
+      cancelAnimationFrame(requestId);
+      mapContext.fillStyle = 'white';
+      mapContext.fillRect(1, 3, 8, 1.2);
+      mapContext.font = '1px Arial';
+      mapContext.fillStyle = 'red';
+      mapContext.fillText('GAME OVER', 1.8, 4);
     }
 
     document.addEventListener('keydown', event => {
@@ -86,17 +120,21 @@ function App() {
           while (board.valid(p)) {
             board.piece.move(p);
             p = moves[KEY.DOWN](board.piece);
+            account.score += POINTS.HARD_DROP;
           }
         }
 
         else if (board.valid(p)) {
           // 이동이 가능한 상태라면 이동
           board.piece.move(p);
-
-          // 그리기 전 이전 좌표 초기화
-          mapContext.clearRect(0, 0, mapContext.canvas.width, mapContext.canvas.height);
-          board.piece.draw();
+          if (event.code === KEY.DOWN) {
+            account.score += POINTS.SOFT_DROP;
+          }
         }
+
+        // 그리기 전 이전 좌표 초기화
+        // mapContext.clearRect(0, 0, mapContext.canvas.width, mapContext.canvas.height);
+        // board.piece.draw();
       }
     });
 
