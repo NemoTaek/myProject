@@ -4,12 +4,22 @@ import Piece from './piece'
 interface board {
   ctx: any; // CanvasRenderingContext2D { ... }
   grid: any;  // 맵의 격자
-  piece: Piece;
-  nextPiece: Piece;
-  reset(): void;
-  getEmptyGrid(): any;
-  valid(p: any): any;
-  rotate(p: any): any;
+  piece: Piece; // 맵에 나오는 블럭
+  nextPiece: Piece; // 다음에 나올 블럭
+
+  reset(): void;  // 새 게임이 시작되면 맵 초기화
+  getEmptyGrid(): Array<Array<number>>;  // 0으로 채워진 행렬
+  getNextPiece(): void;  // NEXT 블럭 정하는 함수
+  drawPiece(): void;  // 블럭 그리는 함수
+  drawBoard(): void;  // 맵에 블럭 그리는 함수
+  valid(p: any): boolean; // 충돌 검사 함수
+  isInsideWalls(x: number, y: number): boolean; // 맵 내의 충돌 감지하는 함수
+  isDropped(x: number, y: number): boolean; // 놓여질 곳에 블럭이 있는지 검사하는 함수
+  rotate(p: any): Array<Array<number>>;  // 블럭 회전 함수
+  drop(move: any, time: any, account: any): boolean;  // 블럭을 내리는 함수
+  freeze(): void; // 더이상 내려갈 수 없는 곳에 닿았을 때 블럭 놓는 함수
+  clearLines(time: any, account: any): void; // 한 줄이 다 채워질 경우 라인 삭제 함수
+  getLinesClearedPoints(lines: number); // 라인 별 점수
 }
 
 class Board implements board {
@@ -49,23 +59,25 @@ class Board implements board {
     );
   }
 
-  // NEXT 블록 정하기
+  // NEXT 블럭 정하는 함수
   getNextPiece() {
     this.nextPiece = new Piece(this.nextCtx);
     this.nextCtx.clearRect(0, 0, this.nextCtx.canvas.width, this.nextCtx.canvas.height);
     this.nextPiece.setNextPosition();
     this.nextPiece.draw();
-    this.drawBoard();
+    // this.drawBoard();
   }
 
-  // 조각 그리기
+  // 블럭 그리는 함수
   drawPiece() {
     this.piece.draw();
     this.drawBoard();
   }
+
+  // 맵에 블럭 그리는 함수
   drawBoard() {
-    this.grid.forEach((row, y) => {
-      row.forEach((value, x) => {
+    this.grid.forEach((row: Array<number>, y: number) => {
+      row.forEach((value: number, x: number) => {
         if (value > 0) {
           this.ctx.fillStyle = COLORS[value];
           this.ctx.fillRect(x, y, 1, 1);
@@ -74,51 +86,64 @@ class Board implements board {
     });
   }
 
-  // 맵 내의 충돌 감지
-  insideWalls(x: number, y: number) {
-    return x >= 0 && x < COLS && y <= ROWS;
-  }
-
-  // 놓여질 곳에 블록이 있는가
-  isDropped(x: number, y: number) {
-    return this.grid[y] && this.grid[y][x] === 0;
-  }
-
   // 충돌 검사 함수
   valid(p: any) {
-    return p.shape.every((row, dy) => {
-      return row.every((value, dx) => {
+    return p.shape.every((row: Array<number>, dy: number) => {
+      return row.every((value: number, dx: number) => {
         let x = p.x + dx;
         let y = p.y + dy;
-        return value === 0 || (this.insideWalls(x, y) && this.isDropped(x, y));
+        return value === 0 || (this.isInsideWalls(x, y) && this.isDropped(x, y));
       });
     });
   }
 
-  // 블록 회전 함수
-  rotate(p: any) {
+  // 맵 내의 충돌 감지하는 함수
+  isInsideWalls(x: number, y: number) {
+    return x >= 0 && x < COLS && y <= ROWS;
+  }
+
+  // 놓여질 곳에 블럭이 있는지 검사하는 함수
+  isDropped(x: number, y: number) {
+    return this.grid[y] && this.grid[y][x] === 0;
+  }
+
+
+  // 블럭 회전 함수
+  rotate(piece: any) {
+    // JSON.stringify(arg): arg를 JSON 문자열로 변환
+    // JSON.parse(json): json 문자열을 javascript에서 사용하는 값으로 변환
+    // 변환하지 않고 사용하면 shape 배열이 이전 값을 기억하고 다음 나올 블럭이 변환된 상태로 나오게 됨
+    // 불변성을 이용하여 현재 블럭이 다음 나올 블럭에 영향을 주지 않도록 깊은 복사하여 사용
+    let p = JSON.parse(JSON.stringify(piece));
+
     // 행렬을 사용하여 시계방향으로 90도 회전 방법: 
     // 전치행렬로 기존 행렬의 행과 열을 바꾸고,
     // [0,0,1]
     // [0,1,0] 을 곱하여 열 기준 대칭
     // [1,0,0]
-    for (let y = 0; y < p.shape.length; ++y) {
-      for (let x = 0; x < y; ++x) {
-        [p.shape[x][y], p.shape[y][x]] = [p.shape[y][x], p.shape[x][y]];
+    if (!this.piece.hardDropped) {
+      for (let y = 0; y < p.shape.length; ++y) {
+        for (let x = 0; x < y; ++x) {
+          [p.shape[x][y], p.shape[y][x]] = [p.shape[y][x], p.shape[x][y]];
+        }
       }
+      // 열 기준 대칭
+      p.shape.forEach((row: Array<number>) => row.reverse());
     }
 
-    // 열 기준 대칭
-    p.shape.forEach(row => row.reverse());
     return p;
   }
 
+  // 블럭을 내리는 함수
   drop(moves: any, time: any, account: any) {
-    // 1칸씩 하강
+    // 내려갈 곳이 있으면 1칸씩 하강
     let p = moves[KEY.DOWN](this.piece);
     if (this.valid(p)) {
       this.piece.move(p);
     }
+
+    // 없으면 멈추고, 라인을 삭제
+    // next에 있는 블럭을 맵에 그리기
     else {
       this.freeze();
       this.clearLines(time, account);
@@ -137,10 +162,10 @@ class Board implements board {
     return true;
   }
 
-  // 더이상 내려갈 수 없는 곳에 닿았을 때 블록 놓는 함수
+  // 더이상 내려갈 수 없는 곳에 닿았을 때 블럭 놓는 함수
   freeze() {
-    this.piece.shape.forEach((row, y) => {
-      row.forEach((value, x) => {
+    this.piece.shape.forEach((row: Array<number>, y: number) => {
+      row.forEach((value: number, x: number) => {
         if (value > 0) {
           this.grid[y + this.piece.y][x + this.piece.x] = value;
         }
@@ -151,9 +176,10 @@ class Board implements board {
   // 한 줄이 다 채워질 경우 라인 삭제 함수
   clearLines(time: any, account: any) {
     let lines = 0;
-    this.grid.forEach((row, y) => {
+    this.grid.forEach((row: Array<number>, y: number) => {
+
       // gird에서 하나의 행이 모두 0 이상의 값으로 채워지면 라인 삭제
-      if (row.every((value) => value > 0)) {
+      if (row.every((value: number) => value > 0)) {
         lines++;
 
         // 행 삭제
@@ -182,7 +208,7 @@ class Board implements board {
     }
   }
 
-  // 라인별 점수
+  // 라인 별 점수
   getLinesClearedPoints(lines: number) {
     return lines === 1 ? POINTS.SINGLE :
       lines === 2 ? POINTS.DOUBLE :

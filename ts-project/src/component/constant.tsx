@@ -3,6 +3,7 @@ export const ROWS: number = 20;
 export const BLOCK_SIZE: number = 30;
 export const LINES_PER_LEVEL: number = 10;
 
+// 키보드 key.code
 export const KEY = {
   UP: 'ArrowUp',
   LEFT: 'ArrowLeft',
@@ -11,6 +12,7 @@ export const KEY = {
   SPACE: 'Space'
 }
 
+// 블럭 색
 export const COLORS = [
   'none',
   'cyan',
@@ -22,6 +24,7 @@ export const COLORS = [
   'red'
 ];
 
+// 블럭 모양
 export const SHAPES = [
   [],
   [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]],
@@ -33,6 +36,7 @@ export const SHAPES = [
   [[7, 7, 0], [0, 7, 7], [0, 0, 0]]
 ];
 
+// 점수
 export const POINTS = {
   SINGLE: 100,
   DOUBLE: 300,
@@ -42,6 +46,7 @@ export const POINTS = {
   HARD_DROP: 2
 };
 
+// 레벨 별 속도
 export const LEVEL = {
   0: 800,
   1: 720,

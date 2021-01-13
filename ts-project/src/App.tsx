@@ -42,11 +42,11 @@ function App() {
 
     // 블럭 이동 세팅
     const moves = {
-      [KEY.LEFT]: p => ({ ...p, x: p.x - 1 }),
-      [KEY.RIGHT]: p => ({ ...p, x: p.x + 1 }),
-      [KEY.DOWN]: p => ({ ...p, y: p.y + 1 }),
-      [KEY.SPACE]: p => ({ ...p, y: p.y + 1 }),
-      [KEY.UP]: p => board.rotate(p)
+      [KEY.LEFT]: (p: any) => ({ ...p, x: p.x - 1 }),
+      [KEY.RIGHT]: (p: any) => ({ ...p, x: p.x + 1 }),
+      [KEY.DOWN]: (p: any) => ({ ...p, y: p.y + 1 }),
+      [KEY.SPACE]: (p: any) => ({ ...p, y: p.y + 1 }),
+      [KEY.UP]: (p: any) => board.rotate(p)
     }
 
     let board = new Board(mapContext, nextContext);
@@ -56,12 +56,51 @@ function App() {
       account.score = 0;
       account.lines = 0;
       account.level = 0;
-      time = { start: performance.now(), elapsed: 0, level: LEVEL[account.level] };
       board.reset();
+      time = { start: performance.now(), elapsed: 0, level: LEVEL[account.level] };
     }
+
+    // 게임 시작 버튼 클릭
+    document.querySelector('.play-button').addEventListener("click", (e) => {
+      play();
+    }, false);
+
+    const addEventListener = () => {
+      document.removeEventListener('keydown', handleKeyPress);
+      document.addEventListener('keydown', handleKeyPress);
+    }
+
+    const handleKeyPress = (event: any) => {
+      if (moves[event.code]) {
+        // 이벤트 버블링 방지
+        event.preventDefault();
+
+        // 조각의 상태를 얻음
+        let p = moves[event.code](board.piece);
+
+        // space 누르면 수직 강하
+        if (event.code === KEY.SPACE) {
+          while (board.valid(p)) {
+            board.piece.move(p);
+            p = moves[KEY.DOWN](board.piece);
+            account.score += POINTS.HARD_DROP;
+          }
+          board.piece.hardDrop();
+        }
+
+        else if (board.valid(p)) {
+          // 이동이 가능한 상태라면 이동
+          board.piece.move(p);
+          if (event.code === KEY.DOWN) {
+            account.score += POINTS.SOFT_DROP;
+          }
+        }
+      }
+    };
 
     // 게임 시작
     const play = (): void => {
+      addEventListener();
       if (requestId) {
         cancelAnimationFrame(requestId);
       }
@@ -78,14 +117,10 @@ function App() {
         // 시작시간 0으로 초기화
         time.start = now;
 
-        board.drop(moves, time, account);
-        console.log(board.drop(moves, time, account));
-        console.log(board.piece.y)
         if (!board.drop(moves, time, account)) {
           gameOver();
           return;
         }
-
       }
 
       // 맵 초기화 후 그리기
@@ -97,8 +132,7 @@ function App() {
     }
 
     // 게임오버
-    function gameOver() {
-      console.log('finish')
+    const gameOver = () => {
       cancelAnimationFrame(requestId);
       mapContext.fillStyle = 'white';
       mapContext.fillRect(1, 3, 8, 1.2);
@@ -106,60 +140,25 @@ function App() {
       mapContext.fillStyle = 'red';
       mapContext.fillText('GAME OVER', 1.8, 4);
     }
-
-    document.addEventListener('keydown', event => {
-      if (moves[event.code]) {
-        // 이벤트 버블링 방지
-        event.preventDefault();
-
-        // 조각의 상태를 얻음
-        let p = moves[event.code](board.piece);
-
-        // space 누르면 수직 강하
-        if (event.code === KEY.SPACE) {
-          while (board.valid(p)) {
-            board.piece.move(p);
-            p = moves[KEY.DOWN](board.piece);
-            account.score += POINTS.HARD_DROP;
-          }
-        }
-
-        else if (board.valid(p)) {
-          // 이동이 가능한 상태라면 이동
-          board.piece.move(p);
-          if (event.code === KEY.DOWN) {
-            account.score += POINTS.SOFT_DROP;
-          }
-        }
-
-        // 그리기 전 이전 좌표 초기화
-        // mapContext.clearRect(0, 0, mapContext.canvas.width, mapContext.canvas.height);
-        // board.piece.draw();
-      }
-    });
-
-    // 게임 시작 버튼 클릭
-    document.querySelector('.play-button').addEventListener("click", (e) => {
-      play();
-    }, false);
-
   }, [])
 
   return (
     <div id="background">
-      <canvas id="tetris_map" ref={mapRef}></canvas>
-      <div className="next_wrap">
-        <div className="next_wrap_info">
-          <h1>TETRIS</h1>
-          <p>Score: <span id="score">0</span></p>
-          <p>Lines: <span id="lines">0</span></p>
-          <p>Level: <span id="level">0</span></p>
-          <div className="next">
-            <p>NEXT</p>
-            <canvas id="next" ref={nextRef} style={{ backgroundColor: "black" }}></canvas>
+      <div className="wrap">
+        <canvas id="tetris_map" ref={mapRef}></canvas>
+        <div className="next_wrap">
+          <div className="next_wrap_info">
+            <h1>TETRIS</h1>
+            <p>Score: <span id="score">0</span></p>
+            <p>Lines: <span id="lines">0</span></p>
+            <p>Level: <span id="level">0</span></p>
+            <div className="next">
+              <p>NEXT</p>
+              <canvas id="next" ref={nextRef} style={{ backgroundColor: "black" }}></canvas>
+            </div>
           </div>
+          <button className="play-button">Play</button>
         </div>
-        <button className="play-button">Play</button>
       </div>
     </div>
   );
