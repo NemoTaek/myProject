@@ -9,7 +9,8 @@ export const KEY = {
   LEFT: 'ArrowLeft',
   RIGHT: 'ArrowRight',
   DOWN: 'ArrowDown',
-  SPACE: 'Space'
+  SPACE: 'Space',
+  P: 'KeyP'
 }
 
 // 블럭 색
