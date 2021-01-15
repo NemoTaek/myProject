@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from 'react';
 import './App.css';
 import { KEY, POINTS, LEVEL } from './component/constant'
 import Board from './component/board'
-import ReactAudioPlayer from 'react-audio-player';
 
 function App() {
   let mapRef = useRef(null);
@@ -51,29 +50,26 @@ function App() {
     }
 
     let soundPlaying = false;
-    // let sound = new Sound(document.querySelector("#sound_wrap"));
-    // sound.muteToggle();
-    // sound.soundSetting();
+
     document.querySelector('#sound_speaker').textContent = "\u{1F507}";
     document.querySelector("#sound_description").innerHTML = "off";
-    // let backgroundSound = sound.create("asset/sounds/Dungeon_Theme.mp3", "background_sound", true);
-    // let movesSound = sound.create("asset/sounds/moves.mp3", "moves_sound");
-    // let dropSound = sound.create("asset/sounds/drop.mp3", "drop_sound");
-    // let pointsSound = sound.create("asset/sounds/points.mp3", "points_sound");
-    // let finishSound = sound.create("asset/sounds/finish.mp3", "finish_sound");
     let bgmArray = [
-      "asset/sounds/Dungeon_Theme.mp3",
-      "asset/sounds/drop.mp3",
-      "asset/sounds/finish.mp3",
-      "asset/sounds/moves.mp3",
-      "asset/sounds/multimove.mp3",
-      "asset/sounds/points.mp3",
+      "asset/sounds/BRADINSKY.mp3",
+      "asset/sounds/KARINKA.mp3",
+      "asset/sounds/LOGINSKA.mp3",
+      "asset/sounds/TROIKA.mp3",
+      "asset/sounds/tetris_elec.mp3"
     ]
-    // let randomSound = sound.create(bgmArray[Math.floor(Math.random() * bgmArray.length)], "a");
-    let bgm = new Audio("/asset/sounds/Dungeon_Theme.mp3");
-    let bgmElement = document.querySelector("#sound_wrap");
+
+    let opening: HTMLAudioElement = document.querySelector("#opening");
+    let bgm: HTMLAudioElement = document.querySelector("#bgm");
+    let gameoverSound: HTMLAudioElement = document.querySelector("#gameover");
+    let dropSound: HTMLAudioElement = document.querySelector("#drop");
+
+    let bgmElement: HTMLElement = document.querySelector("#sound_wrap");
     bgmElement.addEventListener("click", () => {
       if (!soundPlaying) {
+        opening.pause();
         bgmOn();
         soundPlaying = true;
       }
@@ -96,6 +92,7 @@ function App() {
 
     // 게임 시작 버튼 클릭
     document.querySelector('.play-button').addEventListener("click", (e) => {
+      opening.pause();
       play();
       soundPlaying = true;
       bgmOn();
@@ -122,6 +119,9 @@ function App() {
             account.score += POINTS.HARD_DROP;
           }
           board.piece.hardDrop();
+          dropSound.src = "asset/sounds/drop.mp3";
+          dropSound.load();
+          dropSound.play();
         }
 
         else if (board.valid(p)) {
@@ -174,12 +174,17 @@ function App() {
 
     // 게임오버
     const gameOver = () => {
+      bgmOff();
       cancelAnimationFrame(requestId);
       mapContext.fillStyle = 'white';
       mapContext.fillRect(1, 3, 8, 1.2);
       mapContext.font = '1px Arial';
       mapContext.fillStyle = 'red';
       mapContext.fillText('GAME OVER', 1.8, 4);
+
+      gameoverSound.src = "asset/sounds/gameover.mp3";
+      gameoverSound.load();
+      gameoverSound.play();
     }
 
     //일시정지
@@ -203,32 +208,21 @@ function App() {
       mapContext.fillText('PAUSED', 3, 4);
 
       bgmOff();
-
-      // document.addEventListener('keydown', event => {
-      //   if (event.code === 'ArrowUp' || event.code === 'ArrowDown' || event.code === 'ArrowLeft' || event.code === 'ArrowRight') {
-      //     console.log('화살표')
-      //     return false;
-      //   }
-      // }, false);
-      // sound.pause();
     }
 
     const bgmOn = () => {
       document.querySelector('#sound_speaker').textContent = "\u{1F509}";
       document.querySelector("#sound_description").innerHTML = "ON";
-      // bgm.src = bgmArray[Math.floor(Math.random() * bgmArray.length)];
-      // bgm.loop = true; // 반복 재생
-      // bgm.volume = 1; // 음량 설정
-      // console.log(document.querySelector('#bgm'));
-      // document.querySelector('#bgm').play();
-      // bgm.play();
 
+      bgm.src = bgmArray[Math.floor(Math.random() * bgmArray.length)];
+      bgm.loop = true; // 반복 재생
+      bgm.load();
+      bgm.play();
     }
     const bgmOff = () => {
       document.querySelector('#sound_speaker').textContent = "\u{1F507}";
       document.querySelector("#sound_description").innerHTML = "OFF";
-      bgm.pause(); // sound1.mp3 재생
-      // sound.pause();
+      bgm.pause();
     }
   }, [])
 
@@ -249,13 +243,14 @@ function App() {
             <div id="sound_wrap">
               <span className="sound_item" id="sound_speaker"></span>
               <span className="sound_item" id="sound_description"></span>
-              <audio id="bgm" src="./asset/sounds/Dungeon_Theme.mp3"></audio>
-              {/* <ReactAudioPlayer
-                id="bgm"
-                src="/asset/sounds/Dungeon_Theme.mp3"
-                controls
-                ref={(element) => { this.rap = element; }}
-              /> */}
+              {/* <iframe title="a" id="openingIframe" src="asset/sounds/drop.mp3" allow="autoplay" style={{ display: "none" }}></iframe> */}
+              <audio id="opening" autoPlay>
+                <source src="asset/sounds/opening.mp3" type="audio/mp3"></source>
+              </audio>
+              <audio id="bgm"></audio>
+              <audio id="line"></audio>
+              <audio id="drop"></audio>
+              <audio id="gameover"></audio>
             </div>
           </div>
           <button className="play-button">Play</button>

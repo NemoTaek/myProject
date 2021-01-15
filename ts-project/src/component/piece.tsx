@@ -70,6 +70,9 @@ class Piece implements piece {
         // shape 안에 있는 블록 좌표에 x, y를 더한다.
         // 보드에서 블록의 좌표는 this.x + x가 된다.
         if (value > 0) {
+          this.ctx.strokeStyle = "#964b00";
+          this.ctx.lineWidth = 0.025;
+          this.ctx.strokeRect(this.x + x, this.y + y, 1, 1);
           this.ctx.fillRect(this.x + x, this.y + y, 1, 1);
         }
       });

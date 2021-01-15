@@ -79,6 +79,9 @@ class Board implements board {
     this.grid.forEach((row: Array<number>, y: number) => {
       row.forEach((value: number, x: number) => {
         if (value > 0) {
+          this.ctx.strokeStyle = "#964b00";
+          this.ctx.lineWidth = 0.025;
+          this.ctx.strokeRect(x, y, 1, 1);
           this.ctx.fillStyle = COLORS[value];
           this.ctx.fillRect(x, y, 1, 1);
         }
@@ -194,6 +197,10 @@ class Board implements board {
       // 지워진 라인 수만큼 점수 추가
       account.score += this.getLinesClearedPoints(lines);
       account.lines += lines;
+
+      let lineSound = new Audio("asset/sounds/line.mp3");
+      lineSound.load();
+      lineSound.play();
 
       // 일정 기준치의 라인을 제거하면 레벨 상승
       if (account.lines >= LINES_PER_LEVEL) {

@@ -6,17 +6,17 @@
 }
 
 #background{
-  background-image: url('./asset/bg/tetris_bg.jpg');
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-image: url('./asset/bg/bg.jpg');
   background-size: 100vw 100vh;
   background-repeat: no-repeat;
 }
 
 .wrap{
   display: inline-block;
-  width: 80vw;
-  height: 90vh;
-  margin-top: 10vh;
-  margin-left: 1vw;
 }
 
 #tetris_map{
