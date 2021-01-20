@@ -1,11 +1,23 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { KEY, POINTS, LEVEL } from './component/constant'
 import Board from './component/board'
 
+// 더 추가해보고싶은거
+// 개임 정보에 콤보 기능 추가
+// 커스텀 레벨 설정 (레벨 몇부터 시작하기) => 완료
+// redux로 최고 점수, 최고 라인 수, 최고 레벨, 최대 콤보 수 추가
+// 기본 맵 말고 처음 세팅되어있는 맵 추가
 function App() {
   let mapRef = useRef(null);
   let nextRef = useRef(null);
+
+  // 게임 내 점수, 라인 수, 레벨 정보
+  let accountValues = {
+    score: 0,
+    lines: 0,
+    level: 0
+  }
 
   useEffect(() => {
     let map = mapRef.current;
@@ -16,30 +28,6 @@ function App() {
     let requestId: any;
     let time: any;
 
-    // 다 만들고 나중에 redux로 저장하자
-    let accountValues = {
-      score: 0,
-      lines: 0,
-      level: 0
-    }
-
-    // 사용자 정보 출력
-    function updateAccount(key, value) {
-      let element = document.getElementById(key);
-      if (element) {
-        element.textContent = value;
-      }
-    }
-
-    // Proxy인 account 변수에서 속성들을 호출할 때 마다 updateAccount()를 호출하여 DOM을 업데이트
-    let account = new Proxy(accountValues, {
-      set: (target, key, value) => {
-        target[key] = value;
-        updateAccount(key, value);
-        return true;
-      }
-    });
-
     // 블럭 이동 세팅
     const moves = {
       [KEY.LEFT]: (p: any) => ({ ...p, x: p.x - 1 }),
@@ -49,10 +37,42 @@ function App() {
       [KEY.UP]: (p: any) => board.rotate(p)
     }
 
-    let soundPlaying = false;
+    // 레벨 커스텀
+    let levelUp: HTMLButtonElement = document.querySelector('.level_up');
+    levelUp.addEventListener("click", () => {
+      levelDown.disabled = false;
+      // 최고 레벨은 10까지로 제한
+      if (accountValues.level >= 9) {
+        levelUp.disabled = true;
+      }
+      else {
+        levelUp.disabled = false;
+      }
+      accountValues.level++;
+      document.querySelector("#level").textContent = accountValues.level.toString();
+    });
 
+    let levelDown: HTMLButtonElement = document.querySelector('.level_down');
+    // 처음 세팅은 level down을 할 수 없으므로 disabled
+    levelDown.disabled = true;
+    levelDown.addEventListener("click", () => {
+      if (accountValues.level <= 1) {
+        levelDown.disabled = true;
+      }
+      // 10레벨에서 level down 버튼 클릭하면 다시 levelup 버튼 활성화
+      else if (accountValues.level >= 9) {
+        levelUp.disabled = false;
+      }
+      else {
+        levelDown.disabled = false;
+      }
+      accountValues.level--;
+      document.querySelector("#level").textContent = accountValues.level.toString();
+    });
+
+    let soundPlaying = false;
     document.querySelector('#sound_speaker').textContent = "\u{1F507}";
-    document.querySelector("#sound_description").innerHTML = "off";
+    document.querySelector("#sound_description").textContent = "off";
     let bgmArray = [
       "asset/sounds/BRADINSKY.mp3",
       "asset/sounds/KARINKA.mp3",
@@ -83,20 +103,24 @@ function App() {
 
     // 게임 설정 초기화
     const resetGame = (): void => {
-      account.score = 0;
-      account.lines = 0;
-      account.level = 0;
+      document.querySelector("#level").textContent = accountValues.level.toString();
       board.reset();
-      time = { start: performance.now(), elapsed: 0, level: LEVEL[account.level] };
+      time = { start: performance.now(), elapsed: 0, level: LEVEL[accountValues.level] };
     }
 
     // 게임 시작 버튼 클릭
     document.querySelector('.play-button').addEventListener("click", (e) => {
+      // 오프닝 bgm 중지
       opening.pause();
+      // 레벨 커스텀 중지
+      levelUp.style.display = "none";
+      levelDown.style.display = "none";
+      // 게임 시작
       play();
+      // bgm 온
       soundPlaying = true;
       bgmOn();
-    }, false);
+    }, true);
 
     const addEventListener = () => {
       document.removeEventListener('keydown', handleKeyPress);
@@ -116,19 +140,20 @@ function App() {
           while (board.valid(p)) {
             board.piece.move(p);
             p = moves[KEY.DOWN](board.piece);
-            account.score += POINTS.HARD_DROP;
+            accountValues.score += POINTS.HARD_DROP;
           }
           board.piece.hardDrop();
           dropSound.src = "asset/sounds/drop.mp3";
           dropSound.load();
           dropSound.play();
+          console.log(accountValues)
         }
 
         else if (board.valid(p)) {
           // 이동이 가능한 상태라면 이동
           board.piece.move(p);
           if (event.code === KEY.DOWN) {
-            account.score += POINTS.SOFT_DROP;
+            accountValues.score += POINTS.SOFT_DROP;
           }
         }
       }
@@ -150,6 +175,11 @@ function App() {
     }
 
     const animate = (now: number = 0): void => {
+      // 점수, 라인 수, 레벨 출력
+      document.querySelector("#score").textContent = accountValues.score.toString();
+      document.querySelector("#lines").textContent = accountValues.lines.toString();
+      document.querySelector("#level").textContent = accountValues.level.toString();
+
       // 경과시간 초기화
       time.elapsed = now - time.start;
 
@@ -158,7 +188,7 @@ function App() {
         // 시작시간 0으로 초기화
         time.start = now;
 
-        if (!board.drop(moves, time, account)) {
+        if (!board.drop(moves, time, accountValues)) {
           gameOver();
           return;
         }
@@ -176,6 +206,8 @@ function App() {
     const gameOver = () => {
       bgmOff();
       cancelAnimationFrame(requestId);
+
+      // game over 창 띄우기
       mapContext.fillStyle = 'white';
       mapContext.fillRect(1, 3, 8, 1.2);
       mapContext.font = '1px Arial';
@@ -185,6 +217,9 @@ function App() {
       gameoverSound.src = "asset/sounds/gameover.mp3";
       gameoverSound.load();
       gameoverSound.play();
+
+      levelUp.style.display = "inline-block";
+      levelDown.style.display = "inline-block";
     }
 
     //일시정지
@@ -212,18 +247,23 @@ function App() {
 
     const bgmOn = () => {
       document.querySelector('#sound_speaker').textContent = "\u{1F509}";
-      document.querySelector("#sound_description").innerHTML = "ON";
+      document.querySelector("#sound_description").textContent = "ON";
 
       bgm.src = bgmArray[Math.floor(Math.random() * bgmArray.length)];
-      bgm.loop = true; // 반복 재생
+      // bgm.loop = true; // 반복 재생
       bgm.load();
       bgm.play();
     }
     const bgmOff = () => {
       document.querySelector('#sound_speaker').textContent = "\u{1F507}";
-      document.querySelector("#sound_description").innerHTML = "OFF";
+      document.querySelector("#sound_description").textContent = "OFF";
       bgm.pause();
     }
+
+    // bgm 랜덤재생
+    bgm.addEventListener("ended", () => {
+      bgmOn();
+    })
   }, [])
 
   return (
@@ -235,7 +275,12 @@ function App() {
             <h1>TETRIS</h1>
             <p>Score: <span id="score">0</span></p>
             <p>Lines: <span id="lines">0</span></p>
-            <p>Level: <span id="level">0</span></p>
+            <p>Level: <span id="level">{accountValues.level}</span>
+              <div className="level_wrap">
+                <button className="level_up">↑</button>
+                <button className="level_down">↓</button>
+              </div>
+            </p>
             <div className="next">
               <p>NEXT</p>
               <canvas id="next" ref={nextRef} style={{ backgroundColor: "black" }}></canvas>

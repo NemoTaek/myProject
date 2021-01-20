@@ -46,7 +46,22 @@
 .next_wrap_info p{
   font-size: 20px;
   margin-bottom: 10px;
+  height: 30px;
+  line-height: 30px;
 }
+.next_wrap_info span{
+  font-size: 20px;
+}
+.next_wrap_info p .level_wrap{
+  display: inline-block;
+}
+.next_wrap_info p button{
+  margin-left: 20px;
+  font-size: 20px;
+  width: 30px;
+  height: 30px;
+}
+
 .next{
   margin-top: 30px;
 }
