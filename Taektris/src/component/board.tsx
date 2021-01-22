@@ -65,7 +65,6 @@ class Board implements board {
     this.nextCtx.clearRect(0, 0, this.nextCtx.canvas.width, this.nextCtx.canvas.height);
     this.nextPiece.setNextPosition();
     this.nextPiece.draw();
-    // this.drawBoard();
   }
 
   // 블럭 그리는 함수
@@ -161,11 +160,11 @@ class Board implements board {
       this.piece.setStartingPosition();
       this.getNextPiece();
     }
-
     return true;
   }
 
   // 더이상 내려갈 수 없는 곳에 닿았을 때 블럭 놓는 함수
+  // grid 격자에 블록이 추가가 된 것이므로 블록에 해당하는 id 값을 grid에 추가
   freeze() {
     this.piece.shape.forEach((row: Array<number>, y: number) => {
       row.forEach((value: number, x: number) => {

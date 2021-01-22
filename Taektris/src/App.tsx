@@ -3,11 +3,6 @@ import './App.css';
 import { KEY, POINTS, LEVEL } from './component/constant'
 import Board from './component/board'
 
-// 더 추가해보고싶은거
-// 개임 정보에 콤보 기능 추가
-// 커스텀 레벨 설정 (레벨 몇부터 시작하기) => 완료
-// redux로 최고 점수, 최고 라인 수, 최고 레벨, 최대 콤보 수 추가
-// 기본 맵 말고 처음 세팅되어있는 맵 추가
 function App() {
   let mapRef = useRef(null);
   let nextRef = useRef(null);
@@ -36,6 +31,59 @@ function App() {
       [KEY.SPACE]: (p: any) => ({ ...p, y: p.y + 1 }),
       [KEY.UP]: (p: any) => board.rotate(p)
     }
+
+    // bgm 및 기타 오디오 설정
+    let soundPlaying = false;
+    document.querySelector('#sound_speaker').textContent = "\u{1F507}";
+    document.querySelector("#sound_description").textContent = "off";
+    let bgmArray = [
+      "asset/sounds/BRADINSKY.mp3",
+      "asset/sounds/KARINKA.mp3",
+      "asset/sounds/LOGINSKA.mp3",
+      "asset/sounds/TROIKA.mp3",
+      "asset/sounds/tetris_elec.mp3"
+    ]
+
+    let opening: HTMLAudioElement = document.querySelector("#opening");
+    let bgm: HTMLAudioElement = document.querySelector("#bgm");
+    let gameoverSound: HTMLAudioElement = document.querySelector("#gameover");
+    let dropSound: HTMLAudioElement = document.querySelector("#drop");
+    let bgmElement: HTMLElement = document.querySelector("#sound_wrap");
+    // bgm ON/OFF 클릭 시 소리 재생/중지
+    bgmElement.addEventListener("click", () => {
+      if (!soundPlaying) {
+        opening.pause();
+        bgmOn();
+        soundPlaying = true;
+      }
+      else {
+        bgmOff();
+        soundPlaying = false;
+      }
+    });
+
+    // bgm 시작
+    const bgmOn = () => {
+      document.querySelector('#sound_speaker').textContent = "\u{1F509}";
+      document.querySelector("#sound_description").textContent = "ON";
+
+      // 위에서 선언한 src 배열중 랜덤으로 하나 선택 후 재생
+      bgm.src = bgmArray[Math.floor(Math.random() * bgmArray.length)];
+      bgm.load();
+      bgm.play();
+    }
+    // bgm 정지
+    const bgmOff = () => {
+      document.querySelector('#sound_speaker').textContent = "\u{1F507}";
+      document.querySelector("#sound_description").textContent = "OFF";
+      bgm.pause();
+    }
+
+    // bgm 랜덤재생
+    // bgm의 한 곡이 끝났을 때 다시 bgm을 시작하여 랜덤의 곡으로 재생
+    bgm.addEventListener("ended", () => {
+      bgmOn();
+    })
 
     // 레벨 커스텀
     let levelUp: HTMLButtonElement = document.querySelector('.level_up');
@@ -70,43 +118,10 @@ function App() {
       document.querySelector("#level").textContent = accountValues.level.toString();
     });
 
-    let soundPlaying = false;
-    document.querySelector('#sound_speaker').textContent = "\u{1F507}";
-    document.querySelector("#sound_description").textContent = "off";
-    let bgmArray = [
-      "asset/sounds/BRADINSKY.mp3",
-      "asset/sounds/KARINKA.mp3",
-      "asset/sounds/LOGINSKA.mp3",
-      "asset/sounds/TROIKA.mp3",
-      "asset/sounds/tetris_elec.mp3"
-    ]
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    let opening: HTMLAudioElement = document.querySelector("#opening");
-    let bgm: HTMLAudioElement = document.querySelector("#bgm");
-    let gameoverSound: HTMLAudioElement = document.querySelector("#gameover");
-    let dropSound: HTMLAudioElement = document.querySelector("#drop");
-
-    let bgmElement: HTMLElement = document.querySelector("#sound_wrap");
-    bgmElement.addEventListener("click", () => {
-      if (!soundPlaying) {
-        opening.pause();
-        bgmOn();
-        soundPlaying = true;
-      }
-      else {
-        bgmOff();
-        soundPlaying = false;
-      }
-    });
-
+    // 게임 시작 버튼 클릭 후 로직
     let board = new Board(mapContext, nextContext);
-
-    // 게임 설정 초기화
-    const resetGame = (): void => {
-      document.querySelector("#level").textContent = accountValues.level.toString();
-      board.reset();
-      time = { start: performance.now(), elapsed: 0, level: LEVEL[accountValues.level] };
-    }
 
     // 게임 시작 버튼 클릭
     document.querySelector('.play-button').addEventListener("click", (e) => {
@@ -122,6 +137,54 @@ function App() {
       bgmOn();
     }, true);
 
+    // 게임 시작
+    const play = (): void => {
+      addEventListener();
+      if (requestId) {
+        cancelAnimationFrame(requestId);
+      }
+      resetGame();
+      animate();
+    }
+
+    // 게임 설정 초기화
+    const resetGame = (): void => {
+      document.querySelector("#level").textContent = accountValues.level.toString();
+      board.reset();
+      // 시작 시간, 경과 시간, 해당 레벨의 낙하 속도를 가지는 타이머 객체
+      time = { start: performance.now(), elapsed: 0, level: LEVEL[accountValues.level] };
+    }
+
+    const animate = (now: number = 0): void => {
+      // 점수, 라인 수, 레벨 출력
+      document.querySelector("#score").textContent = accountValues.score.toString();
+      document.querySelector("#lines").textContent = accountValues.lines.toString();
+      document.querySelector("#level").textContent = accountValues.level.toString();
+
+      // 경과시간 업데이트
+      time.elapsed = now - time.start;
+
+      // 경과시간이 현재 레벨의 시간을 넘었다면
+      // 시작시간을 0으로 초기화 하고 하강시킴
+      if (time.elapsed > time.level) {
+        time.start = now;
+
+        // 시작시간을 초기화 하자마자 충돌이 나면 게임오버
+        if (!board.drop(moves, time, accountValues)) {
+          gameOver();
+          return;
+        }
+      }
+
+      // 맵 초기화 후 그리기
+      mapContext.clearRect(0, 0, mapContext.canvas.width, mapContext.canvas.height);
+      board.drawPiece();
+
+      // 애니메이션 변수에 담아 flag 설정
+      requestId = requestAnimationFrame(animate);
+    }
+
+    // 키보드 이벤트(블록 움직임, 하드 드롭, 일시정지)
     const addEventListener = () => {
       document.removeEventListener('keydown', handleKeyPress);
       document.addEventListener('keydown', handleKeyPress);
@@ -146,11 +209,10 @@ function App() {
           dropSound.src = "asset/sounds/drop.mp3";
           dropSound.load();
           dropSound.play();
-          console.log(accountValues)
         }
 
+        // 이동이 가능한 상태라면 이동
         else if (board.valid(p)) {
-          // 이동이 가능한 상태라면 이동
           board.piece.move(p);
           if (event.code === KEY.DOWN) {
             accountValues.score += POINTS.SOFT_DROP;
@@ -163,44 +225,6 @@ function App() {
         pause();
       }
     };
-
-    // 게임 시작
-    const play = (): void => {
-      addEventListener();
-      if (requestId) {
-        cancelAnimationFrame(requestId);
-      }
-      resetGame();
-      animate();
-    }
-
-    const animate = (now: number = 0): void => {
-      // 점수, 라인 수, 레벨 출력
-      document.querySelector("#score").textContent = accountValues.score.toString();
-      document.querySelector("#lines").textContent = accountValues.lines.toString();
-      document.querySelector("#level").textContent = accountValues.level.toString();
-
-      // 경과시간 초기화
-      time.elapsed = now - time.start;
-
-      // 몇초마다 내려올건지 설정
-      if (time.elapsed > time.level) {
-        // 시작시간 0으로 초기화
-        time.start = now;
-
-        if (!board.drop(moves, time, accountValues)) {
-          gameOver();
-          return;
-        }
-      }
-
-      // 맵 초기화 후 그리기
-      mapContext.clearRect(0, 0, mapContext.canvas.width, mapContext.canvas.height);
-      board.drawPiece();
-
-      // 애니메이션 시작
-      requestId = requestAnimationFrame(animate);
-    }
 
     // 게임오버
     const gameOver = () => {
@@ -222,13 +246,12 @@ function App() {
       levelDown.style.display = "inline-block";
     }
 
-    //일시정지
+    // 일시정지
     const pause = () => {
       // 일시정지 중이었다면 다시 실행
       if (!requestId) {
         animate();
         bgmOn();
-        // backgroundSound.play();
         return;
       }
 
@@ -244,26 +267,6 @@ function App() {
 
       bgmOff();
     }
-
-    const bgmOn = () => {
-      document.querySelector('#sound_speaker').textContent = "\u{1F509}";
-      document.querySelector("#sound_description").textContent = "ON";
-
-      bgm.src = bgmArray[Math.floor(Math.random() * bgmArray.length)];
-      // bgm.loop = true; // 반복 재생
-      bgm.load();
-      bgm.play();
-    }
-    const bgmOff = () => {
-      document.querySelector('#sound_speaker').textContent = "\u{1F507}";
-      document.querySelector("#sound_description").textContent = "OFF";
-      bgm.pause();
-    }
-
-    // bgm 랜덤재생
-    bgm.addEventListener("ended", () => {
-      bgmOn();
-    })
   }, [])
 
   return (

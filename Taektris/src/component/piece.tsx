@@ -47,10 +47,12 @@ class Piece implements piece {
 
   // Next 맵에서 시작 위치 설정
   setNextPosition() {
+    // 일자블록이라 그런지 가로 길이가 길어서 위치 변경이 필요함
     if (this.typeId === 1) {
       this.x = 0.5;
       this.y = 0.5;
     }
+    // 이건 네모라 가로 길이가 2칸밖에 안되서 위치 변경이 필요함
     else if (this.typeId === 4) {
       this.x = 1.5;
       this.y = 1;
@@ -66,7 +68,7 @@ class Piece implements piece {
     this.ctx.fillStyle = this.color;
     this.shape.forEach((row, y) => {
       row.forEach((value, x) => {
-        // this.x, this.y는 shape의 상단 왼쪽 좌표이다
+        // this.x, this.y는 shape의 상단 왼쪽 좌표이다.
         // shape 안에 있는 블록 좌표에 x, y를 더한다.
         // 보드에서 블록의 좌표는 this.x + x가 된다.
         if (value > 0) {
