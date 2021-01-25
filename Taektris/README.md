@@ -1,5 +1,7 @@
 # Taektris
 
+![스크린샷](/src/asset/bg/taektris.screenshot.png)
+
 React, Typescript를 이용한 테트리스
 
 ```
@@ -26,7 +28,8 @@ React, Typescript를 이용한 테트리스
 │    ├── index.css  
 │    └── index.tsx  
 │  
-├── /package.json             # 패키지 파일  
-├── /tsconfig.json            # 타입스크립트 설정 파일  
-└── /README.md  
+├── package.json              # 패키지 파일  
+├── tsconfig.json             # 타입스크립트 설정 파일  
+└── README.md  
 ```
+
