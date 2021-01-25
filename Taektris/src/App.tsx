@@ -1,11 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import './App.css';
-import { KEY, POINTS, LEVEL } from './component/constant'
+import { COLS, ROWS, BLOCK_SIZE, KEY, POINTS, LEVEL } from './component/constant'
+import { map_standard, map_cliff } from './component/map'
 import Board from './component/board'
 
 function App() {
   let mapRef = useRef(null);
   let nextRef = useRef(null);
+
+  let mapGrid = [map_standard(), map_cliff(), map_standard(), map_cliff()];
+  let mapIndex = 0;
 
   // 게임 내 점수, 라인 수, 레벨 정보
   let accountValues = {
@@ -120,18 +124,61 @@ function App() {
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    // 맵 크기 설정
+    mapContext.canvas.width = COLS * BLOCK_SIZE;
+    mapContext.canvas.height = ROWS * BLOCK_SIZE;
+    mapContext.scale(BLOCK_SIZE, BLOCK_SIZE);
+
+    // 맵 선택
+    // let mapGrid = map_standard();
+    // let mapGrid = map_cliff();
+
+
+    let mapLeft: HTMLSpanElement = document.querySelector('.left');
+    let mapRight: HTMLSpanElement = document.querySelector('.right');
+
+    if (mapIndex > 0 && mapIndex < mapGrid.length) {
+      mapLeft.addEventListener("click", () => {
+        mapIndex--;
+        let board = new Board(mapContext, nextContext, mapGrid[mapIndex]);
+        board.drawBoard();
+        console.log(mapIndex);
+      });
+    }
+
+    else if (0 <= mapIndex && mapIndex < (mapGrid.length - 1)) {
+      mapRight.addEventListener("click", () => {
+        mapIndex++;
+        let board = new Board(mapContext, nextContext, mapGrid[mapIndex]);
+        board.drawBoard();
+        console.log(mapIndex);
+      });
+    }
+
+    // 선택한 맵 그리기
+    let board = new Board(mapContext, nextContext, mapGrid[mapIndex]);
+    // board.drawBoard();
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     // 게임 시작 버튼 클릭 후 로직
-    let board = new Board(mapContext, nextContext);
 
     // 게임 시작 버튼 클릭
     document.querySelector('.play-button').addEventListener("click", (e) => {
       // 오프닝 bgm 중지
       opening.pause();
+
+      // 점수, 라인 수 초기화
+      accountValues.score = 0;
+      accountValues.lines = 0;
+
       // 레벨 커스텀 중지
       levelUp.style.display = "none";
       levelDown.style.display = "none";
+
       // 게임 시작
       play();
+
       // bgm 온
       soundPlaying = true;
       bgmOn();
@@ -200,6 +247,7 @@ function App() {
 
         // space 누르면 수직 강하
         if (event.code === KEY.SPACE) {
+          console.table(board.grid)
           while (board.valid(p)) {
             board.piece.move(p);
             p = moves[KEY.DOWN](board.piece);
@@ -272,18 +320,27 @@ function App() {
   return (
     <div id="background">
       <div className="wrap">
-        <canvas id="tetris_map" ref={mapRef}></canvas>
+        <div className="tetris_map_wrap">
+          <div className="arrow_wrap">
+            <span className="triangle left"></span>
+          </div>
+          <canvas id="tetris_map" ref={mapRef}></canvas>
+          <div className="arrow_wrap">
+            <span className="triangle right"></span>
+          </div>
+        </div>
         <div className="next_wrap">
           <div className="next_wrap_info">
             <h1>TETRIS</h1>
             <p>Score: <span id="score">0</span></p>
             <p>Lines: <span id="lines">0</span></p>
-            <p>Level: <span id="level">{accountValues.level}</span>
+            <div>
+              <p style={{ display: "inline-block" }}>Level: <span id="level">{accountValues.level}</span></p>
               <div className="level_wrap">
                 <button className="level_up">↑</button>
                 <button className="level_down">↓</button>
               </div>
-            </p>
+            </div>
             <div className="next">
               <p>NEXT</p>
               <canvas id="next" ref={nextRef} style={{ backgroundColor: "black" }}></canvas>

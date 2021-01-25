@@ -23,22 +23,19 @@ interface board {
 }
 
 class Board implements board {
-  grid: any;
+  // grid: any;
   piece: Piece;
   nextPiece: Piece;
 
-  constructor(public ctx: any, public nextCtx: any) {
+  constructor(public ctx: any, public nextCtx: any, public grid: any) {
     this.ctx = ctx;
     this.nextCtx = nextCtx;
+    this.grid = grid;
     this.init();
   }
 
   // 맵, 블럭 크기 세팅
   init() {
-    this.ctx.canvas.width = COLS * BLOCK_SIZE;
-    this.ctx.canvas.height = ROWS * BLOCK_SIZE;
-    this.ctx.scale(BLOCK_SIZE, BLOCK_SIZE);
-
     this.nextCtx.canvas.width = 5 * BLOCK_SIZE;
     this.nextCtx.canvas.height = 4 * BLOCK_SIZE;
     this.nextCtx.scale(BLOCK_SIZE, BLOCK_SIZE);
@@ -46,7 +43,6 @@ class Board implements board {
 
   // 새 게임이 시작되면 맵 초기화
   reset() {
-    this.grid = this.getEmptyGrid();
     this.piece = new Piece(this.ctx);
     this.piece.setStartingPosition();
     this.getNextPiece();
@@ -57,6 +53,7 @@ class Board implements board {
     return Array.from(
       { length: ROWS }, () => Array(COLS).fill(0)
     );
+    // return map1();
   }
 
   // NEXT 블럭 정하는 함수
