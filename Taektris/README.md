@@ -1,6 +1,6 @@
 # Taektris
 
-
+![taektris_screenshot](https://user-images.githubusercontent.com/22310601/105666806-6b128c00-5f1d-11eb-8d22-147a2df43201.png)
 
 React, Typescript를 이용한 테트리스
 
