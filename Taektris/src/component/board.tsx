@@ -8,7 +8,6 @@ interface board {
   nextPiece: Piece; // 다음에 나올 블럭
 
   reset(): void;  // 새 게임이 시작되면 맵 초기화
-  // getEmptyGrid(): Array<Array<number>>;  // 0으로 채워진 행렬
   getNextPiece(): void;  // NEXT 블럭 정하는 함수
   drawPiece(): void;  // 블럭 그리는 함수
   drawBoard(): void;  // 맵에 블럭 그리는 함수
@@ -31,14 +30,6 @@ class Board implements board {
     this.ctx = ctx;
     this.nextCtx = nextCtx;
     this.grid = grid;
-    this.init();
-  }
-
-  // 맵, 블럭 크기 세팅
-  init() {
-    this.nextCtx.canvas.width = 5 * BLOCK_SIZE;
-    this.nextCtx.canvas.height = 4 * BLOCK_SIZE;
-    this.nextCtx.scale(BLOCK_SIZE, BLOCK_SIZE);
   }
 
   // 새 게임이 시작되면 맵 초기화

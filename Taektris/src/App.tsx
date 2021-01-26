@@ -141,6 +141,9 @@ function App() {
     mapContext.canvas.width = COLS * BLOCK_SIZE;
     mapContext.canvas.height = ROWS * BLOCK_SIZE;
     mapContext.scale(BLOCK_SIZE, BLOCK_SIZE);
+    nextContext.canvas.width = 5 * BLOCK_SIZE;
+    nextContext.canvas.height = 4 * BLOCK_SIZE;
+    nextContext.scale(BLOCK_SIZE, BLOCK_SIZE);
 
     // 맵 선택
     let mapLeft: HTMLButtonElement = document.querySelector('.left');
@@ -188,7 +191,6 @@ function App() {
         mapContext.clearRect(0, 0, mapContext.canvas.width, mapContext.canvas.height);
         board = new Board(mapContext, nextContext, mapGrid[mapIndex]);
         board.drawBoard();
-        console.table(selectMap[mapIndex]);
 
         // 클릭 하고 첫번째 맵이 되면 왼쪽 클릭 비활성화
         if (mapIndex === 0) {
@@ -204,7 +206,6 @@ function App() {
         mapContext.clearRect(0, 0, mapContext.canvas.width, mapContext.canvas.height);
         board = new Board(mapContext, nextContext, mapGrid[mapIndex]);
         board.drawBoard();
-        console.table(selectMap[mapIndex]);
 
         // 클릭 하고 마지막 맵이 되면 오른쪽 클릭 비활성화
         if (mapIndex === (mapGrid.length - 1)) {
