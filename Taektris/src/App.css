@@ -36,9 +36,10 @@
   height: 0;
   border-style: solid;
   border-width: 30px;
+  background: none;
 }
 .tetris_map_wrap .arrow_wrap .left{
-  border-color: transparent grey transparent transparent;
+  border-color: transparent greenyellow transparent transparent;
   cursor: pointer;
 }
 .tetris_map_wrap .arrow_wrap .right{

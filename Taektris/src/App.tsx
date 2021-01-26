@@ -1,15 +1,28 @@
 import React, { useEffect, useRef } from 'react';
 import './App.css';
 import { COLS, ROWS, BLOCK_SIZE, KEY, POINTS, LEVEL } from './component/constant'
-import { map_standard, map_cliff } from './component/map'
+import { map_standard, map_cliff, map_hi, map_egyptian } from './component/map'
 import Board from './component/board'
 
 function App() {
-  let mapRef = useRef(null);
-  let nextRef = useRef(null);
+  let mapRef = useRef<HTMLCanvasElement>(null);
+  let nextRef = useRef<HTMLCanvasElement>(null);
 
-  let mapGrid = [map_standard(), map_cliff(), map_standard(), map_cliff()];
-  let mapIndex = 0;
+  // 판 선언
+  let board: Board;
+
+  // 맵 인덱스
+  let mapIndex: number = 0;
+
+  // 맵 배열
+  let mapGrid: number[][][] = [map_standard(), map_cliff(), map_hi(), map_egyptian()];
+
+  // 맵도 깊은 복사를 하여 기존의 맵에 영향을 주지 않도록 설계
+  // 블록 회전과 같은 원리
+  let selectMap: number[][][] = [];
+  for (let i = 0; i < mapGrid.length; i++) {
+    selectMap[i] = JSON.parse(JSON.stringify(mapGrid[i]));
+  }
 
   // 게임 내 점수, 라인 수, 레벨 정보
   let accountValues = {
@@ -130,34 +143,75 @@ function App() {
     mapContext.scale(BLOCK_SIZE, BLOCK_SIZE);
 
     // 맵 선택
-    // let mapGrid = map_standard();
-    // let mapGrid = map_cliff();
+    let mapLeft: HTMLButtonElement = document.querySelector('.left');
+    let mapRight: HTMLButtonElement = document.querySelector('.right');
 
+    const rightOff = () => {
+      mapRight.disabled = true;
+      mapRight.style.borderLeftColor = "grey";
+      mapLeft.disabled = false;
+      mapLeft.style.borderRightColor = "greenyellow";
+    }
+    const leftOff = () => {
+      mapLeft.disabled = true;
+      mapLeft.style.borderRightColor = "grey";
+      mapRight.disabled = false;
+      mapRight.style.borderLeftColor = "greenyellow";
+    }
+    const bothOn = () => {
+      mapLeft.disabled = false;
+      mapLeft.style.borderRightColor = "greenyellow";
+      mapRight.disabled = false;
+      mapRight.style.borderLeftColor = "greenyellow";
+    }
 
-    let mapLeft: HTMLSpanElement = document.querySelector('.left');
-    let mapRight: HTMLSpanElement = document.querySelector('.right');
+    // 첫 번째 맵이면 왼쪽 클릭 비활성화
+    if (mapIndex === 0) {
+      leftOff();
+    }
 
-    if (mapIndex > 0 && mapIndex < mapGrid.length) {
-      mapLeft.addEventListener("click", () => {
+    // 두 번째 맵 ~ 마지막에서 두번째 맵 이면 모두 활성화
+    else if (mapIndex > 0 && mapIndex < (mapGrid.length - 1)) {
+      bothOn();
+    }
+
+    // 마지막 맵이면 오른쪽 클릭 바활성화
+    if (mapIndex === (mapGrid.length - 1)) {
+      rightOff();
+    }
+
+    // 맵 변경 클릭 이벤트
+    mapLeft.addEventListener("click", () => {
+      if (mapIndex > 0 && mapIndex < mapGrid.length) {
+        bothOn();
         mapIndex--;
-        let board = new Board(mapContext, nextContext, mapGrid[mapIndex]);
+        mapContext.clearRect(0, 0, mapContext.canvas.width, mapContext.canvas.height);
+        board = new Board(mapContext, nextContext, mapGrid[mapIndex]);
         board.drawBoard();
-        console.log(mapIndex);
-      });
-    }
+        console.table(selectMap[mapIndex]);
 
-    else if (0 <= mapIndex && mapIndex < (mapGrid.length - 1)) {
-      mapRight.addEventListener("click", () => {
+        // 클릭 하고 첫번째 맵이 되면 왼쪽 클릭 비활성화
+        if (mapIndex === 0) {
+          leftOff();
+        }
+      }
+    });
+
+    mapRight.addEventListener("click", () => {
+      if (0 <= mapIndex && mapIndex < (mapGrid.length - 1)) {
+        bothOn();
         mapIndex++;
-        let board = new Board(mapContext, nextContext, mapGrid[mapIndex]);
+        mapContext.clearRect(0, 0, mapContext.canvas.width, mapContext.canvas.height);
+        board = new Board(mapContext, nextContext, mapGrid[mapIndex]);
         board.drawBoard();
-        console.log(mapIndex);
-      });
-    }
+        console.table(selectMap[mapIndex]);
 
-    // 선택한 맵 그리기
-    let board = new Board(mapContext, nextContext, mapGrid[mapIndex]);
-    // board.drawBoard();
+        // 클릭 하고 마지막 맵이 되면 오른쪽 클릭 비활성화
+        if (mapIndex === (mapGrid.length - 1)) {
+          rightOff();
+        }
+      }
+    });
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -165,6 +219,15 @@ function App() {
 
     // 게임 시작 버튼 클릭
     document.querySelector('.play-button').addEventListener("click", (e) => {
+      // 시작 시마다 맵 초기화
+      for (let i = 0; i < mapGrid.length; i++) {
+        selectMap[i] = JSON.parse(JSON.stringify(mapGrid[i]));
+      }
+
+      // 선택한 맵 그리기
+      mapContext.clearRect(0, 0, mapContext.canvas.width, mapContext.canvas.height);
+      board = new Board(mapContext, nextContext, selectMap[mapIndex]);
+
       // 오프닝 bgm 중지
       opening.pause();
 
@@ -175,6 +238,10 @@ function App() {
       // 레벨 커스텀 중지
       levelUp.style.display = "none";
       levelDown.style.display = "none";
+
+      // 맵 선택 중지
+      mapLeft.style.display = "none";
+      mapRight.style.display = "none";
 
       // 게임 시작
       play();
@@ -247,7 +314,6 @@ function App() {
 
         // space 누르면 수직 강하
         if (event.code === KEY.SPACE) {
-          console.table(board.grid)
           while (board.valid(p)) {
             board.piece.move(p);
             p = moves[KEY.DOWN](board.piece);
@@ -290,8 +356,13 @@ function App() {
       gameoverSound.load();
       gameoverSound.play();
 
+      // 레벨 커스텀 활성화
       levelUp.style.display = "inline-block";
       levelDown.style.display = "inline-block";
+
+      // 맵 선택 활성화
+      mapLeft.style.display = "inline-block";
+      mapRight.style.display = "inline-block";
     }
 
     // 일시정지
@@ -315,18 +386,18 @@ function App() {
 
       bgmOff();
     }
-  }, [])
+  })
 
   return (
     <div id="background">
       <div className="wrap">
         <div className="tetris_map_wrap">
           <div className="arrow_wrap">
-            <span className="triangle left"></span>
+            <button className="triangle left"></button>
           </div>
           <canvas id="tetris_map" ref={mapRef}></canvas>
           <div className="arrow_wrap">
-            <span className="triangle right"></span>
+            <button className="triangle right"></button>
           </div>
         </div>
         <div className="next_wrap">

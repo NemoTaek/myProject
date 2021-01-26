@@ -8,7 +8,7 @@ interface board {
   nextPiece: Piece; // 다음에 나올 블럭
 
   reset(): void;  // 새 게임이 시작되면 맵 초기화
-  getEmptyGrid(): Array<Array<number>>;  // 0으로 채워진 행렬
+  // getEmptyGrid(): Array<Array<number>>;  // 0으로 채워진 행렬
   getNextPiece(): void;  // NEXT 블럭 정하는 함수
   drawPiece(): void;  // 블럭 그리는 함수
   drawBoard(): void;  // 맵에 블럭 그리는 함수
@@ -48,13 +48,13 @@ class Board implements board {
     this.getNextPiece();
   }
 
-  // 0으로 채워진 행렬
-  getEmptyGrid() {
-    return Array.from(
-      { length: ROWS }, () => Array(COLS).fill(0)
-    );
-    // return map1();
-  }
+  // // 0으로 채워진 행렬
+  // getEmptyGrid() {
+  //   return Array.from(
+  //     { length: ROWS }, () => Array(COLS).fill(0)
+  //   );
+  //   // return map1();
+  // }
 
   // NEXT 블럭 정하는 함수
   getNextPiece() {
