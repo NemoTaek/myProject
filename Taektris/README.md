@@ -22,7 +22,7 @@ React, Typescript를 이용한 테트리스
 │    │    ├── board.tsx     # 테트리스 맵의 기능에 관련한 컴포넌트  
 │    │    ├── constant.tsx  # 키보드, 블록 색, 모양, 점수, 속도를 정의한 컴포넌트  
 │    │    ├── piece.tsx     # 테트리스 블록을 그리는 컴포넌트  
-│    │    └── map.tsx     # 테트리스 맵 컴포넌트
+│    │    └── map.tsx       # 테트리스 맵 컴포넌트
 │    │  
 │    ├── App.css            # 메인 css  
 │    ├── App.tsx            # 메인 tsx  
